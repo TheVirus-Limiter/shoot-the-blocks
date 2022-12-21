@@ -1,0 +1,618 @@
+<head>
+  <title>test</title>
+  <link rel="icon" type="image/x-icon" href="/sprites/logo.jpg">
+  <meta charset="UTF-8">
+    <meta name="description" content="A fun space shooting game with a shop, upgrades and moe!">
+    <meta name="keywords" content="Javascript, Shootout, Space, Game, Fun">
+    <meta name="author" content="Rehan Raj">
+  </head>
+  
+  <!--<link rel="stylesheet" href="test.css">-->
+      
+  
+  
+  <script type="module">
+  //document.body.style.zoom = "80%"
+  
+      // import kaboom lib
+      import kaboom from "https://unpkg.com/kaboom@3000.0.0-alpha.23/dist/kaboom.mjs";
+      
+      // initialize kaboom context
+      //kaboom();
+      
+      
+  
+  
+  
+  kaboom({
+      width: 800,
+      height: 800,
+      //"fullscreen": true,
+      font: "sinko",
+      canvas: document.querySelector("#mycanvas"),
+      background: [245,255,255],
+  });
+
+loadSprite("heart","sprites2/heart.png")
+loadSprite("menu","sprites2/menu.jpg")
+loadSprite("play","sprites2/play.png")
+loadSprite("credits","sprites2/credits.png")
+loadSprite("creditsUI","sprites2/credits.jpg")
+loadSprite("menuBtn","sprites2/menuBtn.png")
+loadSprite("bullet","sprites2/bullet.png")
+loadFont("coolvetica","fonts/coolvetica.rg-regular.otf")
+loadSprite("gameover","sprites2/gameover.jpg")
+loadSprite("splash","https://thevirus-limiter.github.io/shootout-in-space/sprites/splash.jpg")
+loadSound ("bubbles","https://thevirus-limiter.github.io/shootout-in-space/sound/bubbles.wav")
+loadSprite("splashBG", "https://thevirus-limiter.github.io/shootout-in-space/sprites/splashBG.png")
+loadSound("gameMusic","https://cdn.pixabay.com/download/audio/2022/12/06/audio_d984b811cf.mp3?filename=lady-of-the-80x27s-128379.mp3")
+loadSprite("soundOn","sprites2/soundOn.png")
+loadSprite("soundOff","sprites2/soundOff.png")
+loadSound("shoot","sprites2/shoot.wav")
+loadSprite("cts","sprites2/cts.jpg")
+
+
+  const directions = {
+  LEFT: "left",
+  RIGHT: "right"
+}
+var hearts = 3;
+const fonts = [
+	"coolvetica",
+]
+var spawninterval = 3;
+var ENEMYSPEED = 400
+var bullets =5 
+var level = 0;
+let current_direction = directions.LEFT;
+var firstTime=true;
+var soundOn=true;
+var onClick1=false;
+
+scene("cts",()=>{
+  //play("bubbles")
+   
+const splash = add([
+    sprite("cts"),
+    pos(center()),
+    anchor("center"),
+])
+//volume(10)
+onClick(()=>{go("splash")})
+//wait(1.5,()=>{go("menu")})
+})
+
+
+scene("splash",()=>{
+  play("bubbles")
+   
+  add([
+    sprite("splashBG"),
+    scale(20),
+    //layer("bg"),
+    //color(0, 0, 139)
+  ]);
+
+const splash = add([
+    sprite("splash"),
+    pos(center()),
+    anchor("center"),
+])
+volume(10)
+
+wait(1.5,()=>{go("menu")})
+})
+scene("credits",()=>{
+  const credits = add([
+    sprite("creditsUI"),
+    pos(center()),
+    anchor("center"),
+    z(-20)
+  ])
+
+onClick(()=>{
+  go("menu")
+})
+
+})
+scene("menu",()=>{
+  if(firstTime==true){
+  const menuMusic = play("gameMusic", {
+        volume: 0.15,
+        loop: true})
+      }
+const menuBG= add([
+  pos(center()),
+  anchor("center"),
+  sprite("menu"),
+  z(1)
+])
+const playBtn = add([
+  pos(400,360),
+  anchor("center"),
+  sprite("play"),
+  z(50),
+  area(),
+  scale(0.7),
+  "button",
+  "playBtn"
+])
+const soundOnBtn=add([
+  pos(750,750),
+  sprite("soundOn"),
+  z(50),
+  area(),
+  anchor("center"),
+  scale(0.1),
+  "soundOn"
+])
+const soundOffBtn=add([
+  pos(750,750),
+  sprite("soundOff"),
+  z(50),
+  area(),
+  anchor("center"),
+  scale(0.1),
+  "soundOff"
+])
+//var offClick = false;
+onClick("soundOn",(soundOnBtn)=>{
+ 
+//debug.log(soundOn)
+if(soundOn==true){
+  soundOn=false;
+}
+else if(soundOn==false){
+  soundOn=true;
+}
+
+  })
+
+
+
+
+onUpdate(()=>{
+if(soundOn==true){
+  volume(10)
+  soundOnBtn.hidden=false;
+soundOffBtn.hidden=true;
+}
+if(soundOn==false){
+  volume(0)
+  soundOnBtn.hidden=true;
+soundOffBtn.hidden=false;
+}
+})
+
+const creditsBtn = add([
+  pos(400,480),
+  anchor("center"),
+  sprite("credits"),
+  z(50),
+  area(),
+  scale(0.55),
+  "button",
+  "creditsBtn"
+])
+onHoverUpdate("button",(button)=>{
+  button.color = rgb(
+                    128, 126, 121
+                )
+    
+            wait(0.00000000001,()=>{
+                button.color=rgb()
+            })
+})
+
+const player = add([
+  rect(50,50),
+  pos(150,680),
+  anchor("center"),
+  area(),
+  color(77, 126, 168),
+  z(50),
+  "player"
+])
+const gun = add([
+    rect(50, 10),
+    pos(player.pos.x, player.pos.y),
+    anchor(vec2(-1, 0)),
+    area(),
+    rotate(45),
+    color(77, 126, 168),
+    z(49),
+    "gun"
+])
+onUpdate(()=>{
+  const muzzlePos = gun.pos.add(Vec2.fromAngle(gun.angle).scale(50))
+  gun.pos=player.pos
+  gun.angle = mousePos().angle(gun.pos)
+  offscreen({ destroy: true })
+
+
+});
+function spawnMeteor() {
+    
+    const dir = choose([LEFT, RIGHT])
+    var randN = randi(20,60)
+    add([
+        rect(randN,randN),
+        move(dir, rand(20, 60)),
+        //cleanup(),
+        pos(dir.eq(LEFT) ? width() : 0, rand(-20, 800)),
+        anchor("top"),
+        area(),
+        color(111, 45, 189),
+        z(20),
+        //layer("meteor"),
+        //scale(rand(0.2,0.4)),
+        "block"
+    ])
+    
+    wait(rand(6, 12), spawnMeteor)
+    }
+    spawnMeteor()
+onClick((position)=>{
+  
+  const muzzlePos = gun.pos.add(Vec2.fromAngle(gun.angle).scale(50))
+  play("shoot",{
+    volume:0.5
+  })
+  spawnBullet(muzzlePos.x, muzzlePos.y, Vec2.fromAngle(gun.angle).scale(1, -1))
+  //debug.log(mousePos().angle())
+})
+onCollide("block","bullet",(bl,b)=>{
+      bl.destroy()
+      b.destroy()
+    })
+onCollide("block","player",(bl,p)=>{
+  bl.destroy()
+  player.color = rgb(255, 127, 127)
+     gun.color = rgb(255, 127, 127)
+     wait(0.3,()=>{
+      player.color = rgb(77, 126, 168)
+      gun.color = rgb(77, 126, 168)
+     })
+})
+function spawnBullet(bulletposX,bulletPosY,direction) { 
+  add([
+    rect(25, 3),
+    pos(gun.pos.add(Vec2.fromAngle(gun.angle).scale(50))),
+    anchor("top"),
+    color(165, 36, 34),
+    area(),
+    move(Vec2.fromAngle(gun.angle), 400),
+    z(20),
+    //layer("game"),
+    rotate(gun.angle),
+    "bullet",
+    "danger"
+
+]);
+}
+
+onClick("playBtn",(playBtn)=>{
+  go("game")
+})
+onClick("creditsBtn",(creditsBtn)=>{
+  go("credits")
+})
+
+});
+
+
+
+scene("game",()=>{
+hearts = 3;
+spawninterval = 3;
+ENEMYSPEED = 400
+bullets =5 
+level = 0;
+onKeyPress("f",()=>{
+  debug.inspect=true;
+})
+const testText = add([
+  pos(735,756),
+  text(bullets,{
+    font:fonts[0],
+    transform: (idx, ch) => ({
+    color:(255,255,255)
+    })
+  })
+])
+const levelText = add([
+  pos(400,30),
+  text(level,{
+    font:fonts[0],
+    transform: (idx, ch) => ({
+    color:(255,255,255)
+    })
+  })
+])
+const player = add([
+  rect(50,50),
+  pos(center()),
+  anchor("center"),
+  area(),
+  color(204, 230, 244),
+  z(50),
+  "player"
+])
+const gun = add([
+    rect(50, 10),
+    pos(player.pos.x, player.pos.y),
+    anchor(vec2(-1, 0)),
+    area(),
+    rotate(45),
+    color(204, 230, 244),
+    z(49),
+    "gun"
+])
+
+const heartIcon = add([
+  sprite("heart"),
+  pos(40,40),
+  anchor("center"),
+  scale(0.08),
+  z(100),
+  "icon"
+])
+const heartIcon2 = add([
+  sprite("heart"),
+  pos(90,40),
+  anchor("center"),
+  scale(0.08),
+  z(100),
+  "icon2"
+])
+const heartIcon3 = add([
+  sprite("heart"),
+  pos(140,40),
+  anchor("center"),
+  scale(0.08),
+  z(100),
+  "icon2"
+])
+const bulletIcon = add([
+  sprite("bullet"),
+  pos(780,770),
+  anchor("center"),
+  scale(0.07),
+  z(100),
+  "icon3"
+])
+heartIcon.hidden=true;
+heartIcon2.hidden=true;
+heartIcon3.hidden=true;
+loop(5,()=>{
+  level = level+1
+  levelText.text=level
+  var levelTen = level*10
+  var levelFive = levelTen/2
+  if(level<10){
+  ENEMYSPEED=ENEMYSPEED+levelFive
+}
+else{}
+})
+onUpdate(()=>{
+  const muzzlePos = gun.pos.add(Vec2.fromAngle(gun.angle).scale(50))
+  gun.pos=player.pos
+  gun.angle = mousePos().angle(gun.pos)
+ // debug.log("x " + gun.pos.x+ " y " +gun.pos.y)
+ // trigger.pos.x=gun.pos.x
+  //trigger.pos.y=gun.pos.y+20
+  offscreen({ destroy: true })
+  if (hearts==3){
+    heartIcon.hidden=false;
+heartIcon2.hidden=false;
+heartIcon3.hidden=false;
+  }
+  if(hearts==2){
+    heartIcon.hidden=false;
+heartIcon2.hidden=false;
+heartIcon3.hidden=true;
+  }
+  else if(hearts==1){
+    heartIcon.hidden=false;
+    heartIcon3.hidden=true;
+
+    heartIcon2.hidden=true;
+  }
+  else if(hearts==0){
+    heartIcon.hidden=true;
+heartIcon2.hidden=true;
+heartIcon3.hidden=true;
+go("gameover")
+  }
+  if(bullets>=99){
+    testText.text="99+"
+    testText.pos.x=710
+  }
+  else if(bullets<=99){
+    testText.text=bullets;
+    testText.pos.x=735
+
+  }
+})
+
+
+onClick((position)=>{
+  if(bullets>0){
+  const muzzlePos = gun.pos.add(Vec2.fromAngle(gun.angle).scale(50))
+
+  bullets=bullets-1
+  testText.text=bullets;
+  play("shoot",{
+    volume:0.5
+  })
+  spawnBullet(muzzlePos.x, muzzlePos.y, Vec2.fromAngle(gun.angle).scale(1, -1))
+  //debug.log(mousePos().angle())
+}
+else{shake(1)
+  player.color = rgb(255, 127, 127)
+     gun.color = rgb(255, 127, 127)
+     wait(0.3,()=>{
+      player.color = rgb(204, 230, 244)
+      gun.color = rgb(204, 230, 244)
+     })
+//destroyAll("enemy")
+hearts=hearts-1
+if(hearts>0){
+bullets=5
+}
+testText.text = bullets;
+}
+
+})
+
+function spawnBullet(bulletposX,bulletPosY,direction) {
+  
+    
+  add([
+    rect(25, 3),
+    pos(gun.pos.add(Vec2.fromAngle(gun.angle).scale(50))),
+    anchor("top"),
+    color(165, 36, 34),
+    area(),
+    move(Vec2.fromAngle(gun.angle), 400),
+    z(20),
+    //layer("game"),
+    rotate(gun.angle),
+    "bullet",
+    "danger"
+
+]);
+
+    }
+    onCollide("enemy","bullet",(e,b)=>{
+      e.destroy()
+      b.destroy()
+      bullets = bullets +2
+      testText.text=bullets;
+    })
+    onCollide("enemy","player",(e,p)=>{
+      wait(0.2,()=>{
+        shake(1)
+     p.color = rgb(255, 127, 127)
+     gun.color = rgb(255, 127, 127)
+     wait(0.3,()=>{
+      p.color = rgb(204, 230, 244)
+      gun.color = rgb(204, 230, 244)
+     })
+     hearts=hearts-1
+     e.destroy()})
+    })
+    loop(spawninterval,()=>{
+    spawnEnemy()
+    wait(1,()=>{
+    spawnEnemy()})
+    })
+
+    function spawnEnemy(){
+     var enemyPos = choose(["left", "right", "up", "down"])
+     var enemyPosX=0
+     var enemyPosY=0
+     var enemyDirection=null;
+     if(enemyPos=="left"){
+      enemyPosX=0
+      enemyPosY=randi(200,600)
+      enemyDirection=RIGHT
+     }
+     else if(enemyPos=="right"){
+      enemyPosX=800
+      enemyPosY=randi(200,600)
+      enemyDirection=LEFT
+     }
+     else if(enemyPos=="up"){
+      enemyPosX=randi(200,600)
+      enemyPosY=0
+      enemyDirection=DOWN
+     }
+     else if(enemyPos=="down"){
+      enemyPosX=randi(200,600)
+      enemyPosY=800
+      enemyDirection=UP
+     }
+     var size = randi(40,60)
+      const enemy = add([
+      rect(size,size),
+    pos(enemyPosX,enemyPosY),
+    anchor("center"),
+    //move(enemyDirection,ENEMYSPEED),
+    area(),
+    color(77, 126, 168),
+    z(10),
+  "enemy"])
+
+ onUpdate(()=>{
+  const dir = player.pos.sub(enemy.pos).unit()
+	enemy.move(dir.scale(ENEMYSPEED))
+ })
+
+    }});
+    scene("gameover",()=>{
+      const gameover = add([
+        sprite("gameover"),
+        pos(center()),
+        anchor("center"),
+        z(-20),
+        "gameover"
+      ])
+      const menuBtn = add([
+        sprite("menuBtn"),
+        pos(420,600),
+        anchor("center"),
+        z(10),
+        scale(0.15),
+        area(),
+        "menuBtn",
+        "button"
+      ])
+      onHoverUpdate("button",(button)=>{
+  menuBtn.color = rgb(
+                    128, 126, 121
+                )
+    
+            wait(0.00000000001,()=>{
+                menuBtn.color=rgb()
+            })
+})
+onClick("button",(button)=>{
+  wait(0.1,()=>{
+    //menuMusic.pause()
+    firstTime=false;
+    go("menu")
+  })
+})
+     const levelText  = add([
+     pos(350,350),
+     //anchor("center"),
+     z(50),
+  text("Level "+level,{
+    size:50,
+            width:300,
+    font:fonts[0],
+    transform: (idx, ch) => ({
+    color:(255,255,255)
+    })
+  })
+     ])
+
+     const bulletsText  = add([
+     pos(310,450),
+     //anchor("center"),
+     z(50),
+  text("Bullets left: "+bullets,{
+    size:40,
+            width:300,
+    font:fonts[0],
+    transform: (idx, ch) => ({
+    color:(255,255,255)
+    })
+  })
+     ])
+
+    })
+    go("cts")
+
+</script>
