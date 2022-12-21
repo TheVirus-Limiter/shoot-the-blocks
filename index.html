@@ -1,9 +1,9 @@
 <head>
-  <title>test</title>
-  <link rel="icon" type="image/x-icon" href="/sprites/logo.jpg">
+  <title>Shoot the blocks!</title>
+  <link rel="icon" type="image/x-icon" href="https://thevirus-limiter.github.io/shoot-the-blocks/sprites2/logo.jpg">
   <meta charset="UTF-8">
-    <meta name="description" content="A fun space shooting game with a shop, upgrades and moe!">
-    <meta name="keywords" content="Javascript, Shootout, Space, Game, Fun">
+    <meta name="description" content="A fun, relaxing, shooter game">
+    <meta name="keywords" content="Javascript, Shooter, Relax, Game, Fun, KaboomJS">
     <meta name="author" content="Rehan Raj">
   </head>
   
@@ -111,6 +111,7 @@ scene("credits",()=>{
   ])
 
 onClick(()=>{
+  firstTime=false;
   go("menu")
 })
 
@@ -563,7 +564,7 @@ function spawnBullet(bulletposX,bulletPosY,direction) {
         pos(420,600),
         anchor("center"),
         z(10),
-        scale(0.15),
+        scale(0.6),
         area(),
         "menuBtn",
         "button"
